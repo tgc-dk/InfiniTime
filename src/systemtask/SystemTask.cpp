@@ -102,7 +102,9 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
                      spiNorFlash,
                      heartRateController,
                      motionController,
-                     fs) {
+                     fs),
+    wokenBy {WokenBy::Other},
+    ignoreNextTouchEvent {false} {
 }
 
 void SystemTask::Start() {
@@ -257,12 +259,15 @@ void SystemTask::Work() {
                   settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::DoubleTap)) ||
                  (gesture == Pinetime::Applications::TouchEvents::Tap &&
                   settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::SingleTap)))) {
+              ignoreNextTouchEvent = true;
+              wokenBy = WokenBy::WakeUpAction;
               GoToRunning();
             }
           }
           break;
         }
         case Messages::GoToSleep:
+          displayApp.HideIgnoreTouchPopup(true);
           if (doNotGoToSleep) {
             break;
           }
@@ -341,18 +346,38 @@ void SystemTask::Work() {
           // TODO add intent of fs access icon or something
           break;
         case Messages::OnTouchEvent:
-          if (touchHandler.GetNewTouchInfo()) {
-            touchHandler.UpdateLvglTouchPoint();
+          // if the watch was just woken by touch and button must be used to unlock, ignore the first touch event which
+          // is the touch event that woke the watch. Otherwise the lock-popup will be displayed
+          if (settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::ButtonUnlocks) && ignoreNextTouchEvent) {
+            ignoreNextTouchEvent = false;
+
+            // Ignore touchevents if ButtonUnlocks setting is active and the watch was woken with wakeup actions (touch etc)
+          } else if (!settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::ButtonUnlocks) ||
+                     wokenBy != WokenBy::WakeUpAction) {
+            if (touchHandler.GetNewTouchInfo()) {
+              touchHandler.UpdateLvglTouchPoint();
+            }
+            ReloadIdleTimer();
+            displayApp.PushMessage(Pinetime::Applications::Display::Messages::TouchEvent);
+            // if we get to here TouchEvents is allowed and the "ButtonUnlocks" requirement can be overridden
+            wokenBy = WokenBy::Other;
+          } else {
+            displayApp.HideIgnoreTouchPopup(false);
           }
-          ReloadIdleTimer();
-          displayApp.PushMessage(Pinetime::Applications::Display::Messages::TouchEvent);
           break;
         case Messages::HandleButtonEvent: {
+          // if the IgnoreTouchPopup is active the first button event unlocks the device
+          if (!displayApp.IsIgnoreTouchPopupHidden()) {
+            wokenBy = WokenBy::Button;
+            displayApp.HideIgnoreTouchPopup(true);
+            break;
+          }
           Controllers::ButtonActions action;
           if (nrf_gpio_pin_read(Pinetime::PinMap::Button) == 0) {
             action = buttonHandler.HandleEvent(Controllers::ButtonHandler::Events::Release);
           } else {
             action = buttonHandler.HandleEvent(Controllers::ButtonHandler::Events::Press);
+            wokenBy = WokenBy::Button;
             // This is for faster wakeup, sacrificing special longpress and doubleclick handling while sleeping
             if (IsSleeping()) {
               fastWakeUpDone = true;
@@ -381,6 +406,7 @@ void SystemTask::Work() {
           }
 
           state = SystemTaskState::Sleeping;
+          wokenBy = WokenBy::Other;
           break;
         case Messages::OnNewDay:
           // We might be sleeping (with TWI device disabled.
@@ -491,6 +517,7 @@ void SystemTask::UpdateMotion() {
          motionController.Should_RaiseWake(state == SystemTaskState::Sleeping)) ||
         (settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::Shake) &&
          motionController.Should_ShakeWake(settingsController.GetShakeThreshold()))) {
+      wokenBy = WokenBy::WakeUpAction;
       GoToRunning();
     }
   }

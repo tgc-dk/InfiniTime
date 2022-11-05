@@ -54,6 +54,11 @@ namespace Pinetime {
     class SystemTask {
     public:
       enum class SystemTaskState { Sleeping, Running, GoingToSleep, WakingUp };
+      // Enum describes how the watch was woken:
+      //  * WakeUpAction: The actions selected in the wakeup settings, single/double tap, raise, shake
+      //  * Button: The hardware button
+      //  * Other: Other things that can wake the watch up, eg. apps and notifications.
+      enum class WokenBy { WakeUpAction, Button, Other };
       SystemTask(Drivers::SpiMaster& spi,
                  Drivers::St7789& lcd,
                  Pinetime::Drivers::SpiNorFlash& spiNorFlash,
@@ -126,6 +131,9 @@ namespace Pinetime {
       Pinetime::Controllers::TouchHandler& touchHandler;
       Pinetime::Controllers::ButtonHandler& buttonHandler;
       Pinetime::Controllers::NimbleController nimbleController;
+
+      WokenBy wokenBy;
+      bool ignoreNextTouchEvent;
 
       static void Process(void* instance);
       void Work();
