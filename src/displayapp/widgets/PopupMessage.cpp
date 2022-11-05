@@ -3,10 +3,7 @@
 
 using namespace Pinetime::Applications::Widgets;
 
-PopupMessage::PopupMessage(const char* msg)
-  : message {msg},
-    isHidden {true},
-    btnPopup {nullptr} {
+PopupMessage::PopupMessage(const char* msg) : message {msg}, isHidden {true}, btnPopup {nullptr} {
 }
 
 void PopupMessage::Create() {
@@ -29,7 +26,7 @@ void PopupMessage::SetHidden(bool hidden) {
   if (btnPopup == nullptr && !isHidden) {
     Create();
   } else if (btnPopup != nullptr) {
-    lv_obj_del (btnPopup);
+    lv_obj_del(btnPopup);
     btnPopup = nullptr;
   }
 }

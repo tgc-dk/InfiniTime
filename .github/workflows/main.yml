@@ -34,7 +34,7 @@ jobs:
         shell: bash
         env:
           SOURCES_DIR: .
-        run: /opt/build.sh all
+        run: /opt/build.sh pinetime-app
       # Unzip the package because Upload Artifact will zip up the files
       - name: Unzip DFU package
         run: unzip ./build/output/pinetime-mcuboot-app-dfu-*.zip -d ./build/output/pinetime-mcuboot-app-dfu
