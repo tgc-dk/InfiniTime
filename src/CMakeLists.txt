@@ -408,7 +408,6 @@ list(APPEND SOURCE_FILES
         displayapp/widgets/Counter.cpp
         displayapp/widgets/PageIndicator.cpp
         displayapp/widgets/StatusIcons.cpp
-        displayapp/widgets/PopupMessage.cpp
 
         ## Settings
         displayapp/screens/settings/QuickSettings.cpp

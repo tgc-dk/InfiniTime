@@ -93,8 +93,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     alarmController {alarmController},
     brightnessController {brightnessController},
     touchHandler {touchHandler},
-    filesystem {filesystem},
-    popupMessage {"Touch input\nis ignored,\npush button\nto unlock."} {
+    filesystem {filesystem} {
 }
 
 void DisplayApp::Start(System::BootErrors error) {
@@ -539,16 +538,4 @@ void DisplayApp::ApplyBrightness() {
     brightness = Controllers::BrightnessController::Levels::High;
   }
   brightnessController.Set(brightness);
-}
-
-Apps DisplayApp::GetCurrentApp() {
-  return currentApp;
-}
-
-void DisplayApp::HideIgnoreTouchPopup(bool hidden) {
-  popupMessage.SetHidden(hidden);
-}
-
-bool DisplayApp::IsIgnoreTouchPopupHidden() {
-  return popupMessage.IsHidden();
 }
