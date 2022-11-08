@@ -22,7 +22,9 @@ namespace Pinetime {
         ShowPairingKey,
         AlarmTriggered,
         Clock,
-        BleRadioEnableToggle
+        BleRadioEnableToggle,
+        ShowIgnoreTouchPopup,
+        HideIgnoreTouchPopup
       };
     }
   }

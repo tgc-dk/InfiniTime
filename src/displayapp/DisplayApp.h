@@ -16,6 +16,7 @@
 #include "components/timer/TimerController.h"
 #include "components/alarm/AlarmController.h"
 #include "touchhandler/TouchHandler.h"
+#include "displayapp/widgets/PopupMessage.h"
 
 #include "displayapp/Messages.h"
 #include "BootErrors.h"
@@ -94,6 +95,8 @@ namespace Pinetime {
       Pinetime::Controllers::FS& filesystem;
 
       Pinetime::Controllers::FirmwareValidator validator;
+
+      Pinetime::Applications::Widgets::PopupMessage popupMessage;
 
       TaskHandle_t taskHandle;
 
