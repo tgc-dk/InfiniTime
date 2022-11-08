@@ -82,6 +82,8 @@ SettingWakeUp::SettingWakeUp(Pinetime::Applications::DisplayApp* app, Pinetime::
     lv_checkbox_set_checked(cbOption[optionsTotal], true);
   }
   optionsTotal++;
+
+
 }
 
 SettingWakeUp::~SettingWakeUp() {
