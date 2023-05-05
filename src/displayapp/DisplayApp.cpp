@@ -95,7 +95,8 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     touchHandler {touchHandler},
     filesystem {filesystem},
     lvgl {lcd, filesystem},
-    timer(this, TimerCallback) {
+    timer(this, TimerCallback),
+    popupMessage {"Touch input\nis ignored,\npush button\nto unlock."} {
 }
 
 void DisplayApp::Start(System::BootErrors error) {
@@ -362,6 +363,12 @@ void DisplayApp::Refresh() {
       case Messages::OnChargingEvent:
         RestoreBrightness();
         motorController.RunForDuration(15);
+        break;
+      case Messages::ShowIgnoreTouchPopup:
+        popupMessage.SetHidden(false);
+        break;
+      case Messages::HideIgnoreTouchPopup:
+        popupMessage.SetHidden(true);
         break;
     }
   }

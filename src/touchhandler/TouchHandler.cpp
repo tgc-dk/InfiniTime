@@ -33,34 +33,48 @@ Pinetime::Applications::TouchEvents TouchHandler::GestureGet() {
   return returnGesture;
 }
 
-bool TouchHandler::ProcessTouchInfo(Drivers::Cst816S::TouchInfos info) {
+TouchHandler::TouchProcessReply TouchHandler::ProcessTouchInfo(Drivers::Cst816S::TouchInfos info, bool buttonUnlocksOn) {
   if (!info.isValid) {
-    return false;
+    return TouchHandler::TouchProcessReply::NoAction;
   }
 
-  // Only a single gesture per touch
-  if (info.gesture != Pinetime::Drivers::Cst816S::Gestures::None) {
-    if (gestureReleased) {
-      if (info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideDown ||
-          info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideLeft ||
-          info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideUp ||
-          info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideRight ||
-          info.gesture == Pinetime::Drivers::Cst816S::Gestures::LongPress) {
-        if (info.touching) {
+  // if the watch was just woken by touch and button must be used to unlock, ignore the first touch event which
+  // is the touch event that woke the watch. Otherwise the lock-popup will be displayed
+  if (buttonUnlocksOn && ignoreNextTouchEvent) {
+    ignoreNextTouchEvent = false;
+    return TouchHandler::TouchProcessReply::NoAction;
+
+  } else if (!buttonUnlocksOn || wokenBy != WokenBy::WakeUpAction) {
+
+    // if we get to here TouchEvents is allowed and the "ButtonUnlocks" requirement can be overridden
+    wokenBy = WokenBy::Other;
+
+    // Only a single gesture per touch
+    if (info.gesture != Pinetime::Drivers::Cst816S::Gestures::None) {
+      if (gestureReleased) {
+        if (info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideDown ||
+            info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideLeft ||
+            info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideUp ||
+            info.gesture == Pinetime::Drivers::Cst816S::Gestures::SlideRight ||
+            info.gesture == Pinetime::Drivers::Cst816S::Gestures::LongPress) {
+          if (info.touching) {
+            gesture = ConvertGesture(info.gesture);
+            gestureReleased = false;
+          }
+        } else {
           gesture = ConvertGesture(info.gesture);
-          gestureReleased = false;
         }
-      } else {
-        gesture = ConvertGesture(info.gesture);
       }
     }
+
+    if (!info.touching) {
+      gestureReleased = true;
+    }
+
+    currentTouchPoint = {info.x, info.y, info.touching};
+
+    return TouchHandler::TouchProcessReply::TouchEvent;
+  } else {
+    return TouchHandler::TouchProcessReply::IgnoreTouchPopup;
   }
-
-  if (!info.touching) {
-    gestureReleased = true;
-  }
-
-  currentTouchPoint = {info.x, info.y, info.touching};
-
-  return true;
 }
