@@ -477,8 +477,10 @@ void SystemTask::UpdateMotion() {
          motionController.ShouldRaiseWake(state == SystemTaskState::Sleeping)) ||
         (settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::Shake) &&
          motionController.ShouldShakeWake(settingsController.GetShakeThreshold()))) {
-      touchHandler.SetWokenBy(Pinetime::Controllers::TouchHandler::WokenBy::WakeUpAction);
-      touchHandler.SetIfButtonUnlocksIgnoreTouch(true);
+      if (state == SystemTaskState::Sleeping) {
+        touchHandler.SetWokenBy(Pinetime::Controllers::TouchHandler::WokenBy::WakeUpAction);
+        touchHandler.SetIfButtonUnlocksIgnoreTouch(true);
+      }
       GoToRunning();
     }
   }
