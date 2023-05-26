@@ -38,10 +38,6 @@ namespace Pinetime {
         return currentTouchPoint.y;
       }
 
-      void SetIfButtonUnlocksIgnoreTouch(bool ignore) {
-        ignoreNextTouchEvent = ignore;
-      }
-
       void SetIgnoreTouchPopupHidden(bool hidden) {
         ignoreTouchPopupHidden = hidden;
       }
@@ -50,8 +46,9 @@ namespace Pinetime {
         return ignoreTouchPopupHidden;
       }
 
-      void SetWokenBy(WokenBy woken) {
+      void SetWokenBy(WokenBy woken, bool ifButtonUnlocksIgnoreTouch) {
         wokenBy = woken;
+        ignoreNextTouchEvent = ifButtonUnlocksIgnoreTouch;
       }
 
       Pinetime::Applications::TouchEvents GestureGet();
