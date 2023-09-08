@@ -12,12 +12,7 @@ namespace Pinetime {
       enum class ClockType : uint8_t { H24, H12 };
       enum class Notification : uint8_t { On, Off, Sleep };
       enum class ChimesOption : uint8_t { None, Hours, HalfHours };
-      enum class WakeUpMode : uint8_t {
-        SingleTap = 0,
-        DoubleTap = 1,
-        RaiseWrist = 2,
-        Shake = 3,
-      };
+      enum class WakeUpMode : uint8_t { SingleTap = 0, DoubleTap = 1, RaiseWrist = 2, Shake = 3, LowerWrist = 4 };
       enum class Colors : uint8_t {
         White,
         Silver,
@@ -39,12 +34,14 @@ namespace Pinetime {
         Pink
       };
       enum class PTSGaugeStyle : uint8_t { Full, Half, Numeric };
+      enum class PTSWeather : uint8_t { On, Off };
 
       struct PineTimeStyle {
         Colors ColorTime = Colors::Teal;
         Colors ColorBar = Colors::Teal;
         Colors ColorBG = Colors::Black;
         PTSGaugeStyle gaugeStyle = PTSGaugeStyle::Full;
+        PTSWeather weatherEnable = PTSWeather::Off;
       };
 
       struct WatchFaceInfineat {
@@ -146,6 +143,16 @@ namespace Pinetime {
         return settings.PTS.gaugeStyle;
       };
 
+      void SetPTSWeather(PTSWeather weatherEnable) {
+        if (weatherEnable != settings.PTS.weatherEnable)
+          settingsChanged = true;
+        settings.PTS.weatherEnable = weatherEnable;
+      };
+
+      PTSWeather GetPTSWeather() const {
+        return settings.PTS.weatherEnable;
+      };
+
       void SetAppMenu(uint8_t menu) {
         appMenu = menu;
       };
@@ -226,7 +233,7 @@ namespace Pinetime {
         }
       };
 
-      std::bitset<4> getWakeUpModes() const {
+      std::bitset<5> getWakeUpModes() const {
         return settings.wakeUpMode;
       }
 
@@ -267,7 +274,7 @@ namespace Pinetime {
     private:
       Pinetime::Controllers::FS& fs;
 
-      static constexpr uint32_t settingsVersion = 0x0004;
+      static constexpr uint32_t settingsVersion = 0x0006;
 
       struct SettingsData {
         uint32_t version = settingsVersion;
@@ -284,8 +291,9 @@ namespace Pinetime {
 
         WatchFaceInfineat watchFaceInfineat;
 
-        std::bitset<4> wakeUpMode {0};
+        std::bitset<5> wakeUpMode {0};
         uint16_t shakeWakeThreshold = 150;
+
         Controllers::BrightnessController::Levels brightLevel = Controllers::BrightnessController::Levels::Medium;
       };
 
