@@ -5,10 +5,12 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <displayapp/Controllers.h>
 #include "displayapp/screens/Screen.h"
 #include "components/datetime/DateTimeController.h"
 #include "components/ble/BleController.h"
 #include "utility/DirtyValue.h"
+#include "displayapp/apps/Apps.h"
 
 namespace Pinetime {
   namespace Controllers {
@@ -76,7 +78,7 @@ namespace Pinetime {
         lv_obj_t* backgroundLabel;
         lv_obj_t* bleIcon;
         lv_obj_t* batteryPlug;
-        lv_obj_t* label_battery_vallue;
+        lv_obj_t* label_battery_value;
         lv_obj_t* heartbeatIcon;
         lv_obj_t* heartbeatValue;
         lv_obj_t* stepIcon;
@@ -100,5 +102,26 @@ namespace Pinetime {
         lv_font_t* font_segment115 = nullptr;
       };
     }
+
+    template <>
+    struct WatchFaceTraits<WatchFace::CasioStyleG7710> {
+      static constexpr WatchFace watchFace = WatchFace::CasioStyleG7710;
+      static constexpr const char* name = "Casio G7710";
+
+      static Screens::Screen* Create(AppControllers& controllers) {
+        return new Screens::WatchFaceCasioStyleG7710(controllers.dateTimeController,
+                                                     controllers.batteryController,
+                                                     controllers.bleController,
+                                                     controllers.notificationManager,
+                                                     controllers.settingsController,
+                                                     controllers.heartRateController,
+                                                     controllers.motionController,
+                                                     controllers.filesystem);
+      };
+
+      static bool IsAvailable(Pinetime::Controllers::FS& filesystem) {
+        return Screens::WatchFaceCasioStyleG7710::IsAvailable(filesystem);
+      }
+    };
   }
 }
