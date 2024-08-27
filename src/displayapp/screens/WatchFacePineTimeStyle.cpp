@@ -444,18 +444,6 @@ void WatchFacePineTimeStyle::SetBatteryIcon() {
   batteryIcon.SetBatteryPercentage(batteryPercent);
 }
 
-void WatchFacePineTimeStyle::AlignIcons() {
-  bool notif = notificationState.Get() || notificationNbState.Get();
-  if (notif && bleState.Get()) {
-    lv_obj_align(bleIcon, sidebar, LV_ALIGN_IN_TOP_MID, 8, 25);
-    lv_obj_align(notificationIcon, sidebar, LV_ALIGN_IN_TOP_MID, -8, 25);
-  } else if (notif && !bleState.Get()) {
-    lv_obj_align(notificationIcon, sidebar, LV_ALIGN_IN_TOP_MID, 0, 25);
-  } else {
-    lv_obj_align(bleIcon, sidebar, LV_ALIGN_IN_TOP_MID, 0, 25);
-  }
-}
-
 void WatchFacePineTimeStyle::Refresh() {
   isCharging = batteryController.IsCharging();
   if (isCharging.IsUpdated()) {
@@ -494,7 +482,6 @@ void WatchFacePineTimeStyle::Refresh() {
     } else {
       lv_label_set_text_static(notificationIcon, NotificationIcon::GetIcon(true));
     }
-    AlignIcons();
   }
 
   currentDateTime = dateTimeController.CurrentDateTime();
