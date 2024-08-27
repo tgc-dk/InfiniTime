@@ -473,10 +473,12 @@ void WatchFacePineTimeStyle::Refresh() {
   notificationState = notificationManager.AreNewNotificationsAvailable();
   if (notificationState.IsUpdated()) {
     if (notificationState.Get()) {
-      lv_obj_set_style_local_text_color(notificationIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, Convert(settingsController.GetPTSColorTime()));
+      lv_obj_set_style_local_text_color(notificationIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT,
+                                        Convert(settingsController.GetPTSColorTime()));
       lv_label_set_text_static(notificationIcon, NotificationIcon::GetIcon(true));
     } else if (notificationManager.NbNotifications() > 0) {
-      lv_obj_set_style_local_text_color(notificationIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, lv_color_hex(0xFFFFFF));
+      lv_obj_set_style_local_text_color(notificationIcon, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT,
+                                        Convert(settingsController.GetPTSColorTime());
       lv_label_set_text_static(notificationIcon, NotificationIcon::GetIcon(true));
     } else {
       lv_label_set_text_static(notificationIcon, NotificationIcon::GetIcon(false));
