@@ -102,7 +102,9 @@ void SystemTask::Work() {
   watchdog.Setup(7, Drivers::Watchdog::SleepBehaviour::Run, Drivers::Watchdog::HaltBehaviour::Pause);
   watchdog.Start();
   NRF_LOG_INFO("Last reset reason : %s", Pinetime::Drivers::ResetReasonToString(watchdog.GetResetReason()));
-  APP_GPIOTE_INIT(2);
+  if (!nrfx_gpiote_is_init()) {
+    nrfx_gpiote_init();
+  }
 
   spi.Init();
   spiNorFlash.Init();
@@ -136,6 +138,9 @@ void SystemTask::Work() {
   settingsController.Init();
 
   displayApp.Register(this);
+  displayApp.Register(&nimbleController.weather());
+  displayApp.Register(&nimbleController.music());
+  displayApp.Register(&nimbleController.navigation());
   displayApp.Start(bootError);
 
   heartRateSensor.Init();
@@ -189,13 +194,16 @@ void SystemTask::Work() {
           if (!bleController.IsFirmwareUpdating()) {
             doNotGoToSleep = false;
           }
-          displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
           break;
         case Messages::DisableSleeping:
           doNotGoToSleep = true;
           break;
         case Messages::GoToRunning:
-          spi.Wakeup();
+          // SPI doesn't go to sleep for always on mode
+          if (!settingsController.GetAlwaysOnDisplay()) {
+            spi.Wakeup();
+          }
 
           // Double Tap needs the touch screen to be in normal mode
           if (!settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::DoubleTap)) {
@@ -244,7 +252,7 @@ void SystemTask::Work() {
           heartRateApp.PushMessage(Pinetime::Applications::HeartRateTask::Messages::GoToSleep);
           break;
         case Messages::OnNewTime:
-          displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::UpdateDateTime);
           if (alarmController.State() == Controllers::AlarmController::AlarmState::Set) {
             alarmController.ScheduleAlarm();
@@ -256,7 +264,7 @@ void SystemTask::Work() {
               touchHandler.SetWokenBy(Pinetime::Controllers::TouchHandler::WokenBy::Other, false);
               GoToRunning();
             } else {
-              displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
+              displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
             }
             displayApp.PushMessage(Pinetime::Applications::Display::Messages::NewNotification);
           }
@@ -269,7 +277,7 @@ void SystemTask::Work() {
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::AlarmTriggered);
           break;
         case Messages::BleConnected:
-          displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
           isBleDiscoveryTimerRunning = true;
           bleDiscoveryTimer = 5;
           break;
@@ -346,7 +354,11 @@ void SystemTask::Work() {
             // if it's in sleep mode. Avoid bricked device by disabling sleep mode on these versions.
             spiNorFlash.Sleep();
           }
-          spi.Sleep();
+
+          // Must keep SPI awake when still updating the display for always on
+          if (!settingsController.GetAlwaysOnDisplay()) {
+            spi.Sleep();
+          }
 
           // Double Tap needs the touch screen to be in normal mode
           if (!settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::DoubleTap)) {
@@ -367,9 +379,13 @@ void SystemTask::Work() {
           if (settingsController.GetNotificationStatus() != Controllers::Settings::Notification::Sleep &&
               settingsController.GetChimeOption() == Controllers::Settings::ChimesOption::Hours &&
               alarmController.State() != AlarmController::AlarmState::Alerting) {
+            // if sleeping, we can't send a chime to displayApp yet (SPI flash switched off)
+            // request running first and repush the chime message
             if (state == SystemTaskState::Sleeping) {
               touchHandler.SetWokenBy(Pinetime::Controllers::TouchHandler::WokenBy::Other, false);
               GoToRunning();
+              PushMessage(msg);
+            } else {
               displayApp.PushMessage(Pinetime::Applications::Display::Messages::Chime);
             }
           }
@@ -379,9 +395,13 @@ void SystemTask::Work() {
           if (settingsController.GetNotificationStatus() != Controllers::Settings::Notification::Sleep &&
               settingsController.GetChimeOption() == Controllers::Settings::ChimesOption::HalfHours &&
               alarmController.State() != AlarmController::AlarmState::Alerting) {
+            // if sleeping, we can't send a chime to displayApp yet (SPI flash switched off)
+            // request running first and repush the chime message
             if (state == SystemTaskState::Sleeping) {
               touchHandler.SetWokenBy(Pinetime::Controllers::TouchHandler::WokenBy::Other, false);
               GoToRunning();
+              PushMessage(msg);
+            } else {
               displayApp.PushMessage(Pinetime::Applications::Display::Messages::Chime);
             }
           }
@@ -431,8 +451,6 @@ void SystemTask::Work() {
     }
 
     monitor.Process();
-    uint32_t systick_counter = nrf_rtc_counter_get(portNRF_RTC_REG);
-    dateTimeController.UpdateTime(systick_counter);
     NoInit_BackUpTime = dateTimeController.CurrentDateTime();
     if (nrf_gpio_pin_read(PinMap::Button) == 0) {
       watchdog.Reload();
@@ -447,7 +465,8 @@ void SystemTask::UpdateMotion() {
   }
 
   if (state == SystemTaskState::Sleeping && !(settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::RaiseWrist) ||
-                                              settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::Shake))) {
+                                              settingsController.isWakeUpModeOn(Pinetime::Controllers::Settings::WakeUpMode::Shake) ||
+                                              motionController.GetService()->IsMotionNotificationSubscribed())) {
     return;
   }
 
@@ -482,7 +501,7 @@ void SystemTask::HandleButtonAction(Controllers::ButtonActions action) {
     return;
   }
 
-  displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
+  displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
 
   using Actions = Controllers::ButtonActions;
 
@@ -535,10 +554,7 @@ void SystemTask::PushMessage(System::Messages msg) {
   if (in_isr()) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xQueueSendFromISR(systemTasksMsgQueue, &msg, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken == pdTRUE) {
-      /* Actual macro used here is port specific. */
-      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    }
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
   } else {
     xQueueSend(systemTasksMsgQueue, &msg, portMAX_DELAY);
   }
