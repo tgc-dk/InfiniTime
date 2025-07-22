@@ -10,23 +10,23 @@ void PopupMessage::Create() {
   lv_obj_align(popup, lv_scr_act(), LV_ALIGN_CENTER, 0, 0);
   lv_obj_set_style_local_bg_color(popup, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, Colors::bg);
   lv_obj_set_style_local_bg_opa(popup, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_60);
-  lv_obj_t* lockBody = lv_obj_create(popup, nullptr);
-  lv_obj_set_size(lockBody, 55, 50);
-  lv_obj_align(lockBody, popup, LV_ALIGN_CENTER, 0, 10);
 
-  lv_obj_set_style_local_bg_color(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+  lv_obj_t* lockBody = lv_obj_create(popup, nullptr);
+  lv_obj_set_size(lockBody, 50, 45);
+  lv_obj_align(lockBody, popup, LV_ALIGN_CENTER, 0, 9);
+  lv_obj_set_style_local_bg_color(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_SILVER);
   lv_obj_set_style_local_bg_opa(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_0);
-  lv_obj_set_style_local_border_color(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
-  lv_obj_set_style_local_border_width(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 22);
+  lv_obj_set_style_local_border_color(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_SILVER);
+  lv_obj_set_style_local_border_width(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 23);
   lv_obj_set_style_local_border_side(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_BORDER_SIDE_FULL);
   lv_obj_set_style_local_border_opa(lockBody, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_100);
 
   lv_obj_t* lockTop = lv_obj_create(popup, nullptr);
   lv_obj_set_size(lockTop, 30, 35);
-  lv_obj_align(lockTop, popup, LV_ALIGN_CENTER, 0, -20);
-  lv_obj_set_style_local_bg_color(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+  lv_obj_align(lockTop, popup, LV_ALIGN_CENTER, 0, -17);
+  lv_obj_set_style_local_bg_color(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_SILVER);
   lv_obj_set_style_local_bg_opa(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_0);
-  lv_obj_set_style_local_border_color(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+  lv_obj_set_style_local_border_color(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_SILVER);
   lv_obj_set_style_local_border_width(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 6);
   lv_obj_set_style_local_border_side(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_BORDER_SIDE_FULL);
   lv_obj_set_style_local_border_opa(lockTop, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_100);
