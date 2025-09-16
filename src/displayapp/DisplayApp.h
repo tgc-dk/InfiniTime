@@ -81,6 +81,8 @@ namespace Pinetime {
       void Register(Pinetime::Controllers::MusicService* musicService);
       void Register(Pinetime::Controllers::NavigationService* NavigationService);
 
+      bool IsWatchFace();
+
     private:
       Pinetime::Drivers::St7789& lcd;
       const Pinetime::Drivers::Cst816S& touchPanel;

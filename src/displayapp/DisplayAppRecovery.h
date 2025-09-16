@@ -74,6 +74,10 @@ namespace Pinetime {
       void Register(Pinetime::Controllers::MusicService* musicService);
       void Register(Pinetime::Controllers::NavigationService* NavigationService);
 
+      bool IsWatchFace() {
+        return false;
+      }
+
     private:
       TaskHandle_t taskHandle;
       static void Process(void* instance);

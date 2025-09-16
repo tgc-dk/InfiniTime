@@ -257,7 +257,13 @@ void SystemTask::Work() {
               displayApp.PushMessage(Pinetime::Applications::Display::Messages::TouchEvent);
             } else {
               auto gesture = touchHandler.GestureGet();
-              if (gesture != Pinetime::Applications::TouchEvents::None) {
+              if (
+                displayApp.IsWatchFace()
+                && (gesture == Pinetime::Applications::TouchEvents::Tap
+                  || gesture == Pinetime::Applications::TouchEvents::DoubleTap)
+              ) {
+                // Do not show the lock popup on the watch face with a single tap
+              } else if (gesture != Pinetime::Applications::TouchEvents::None) {
                 displayApp.PushMessage(Pinetime::Applications::Display::Messages::ShowIgnoreTouchPopup);
               }
             }
